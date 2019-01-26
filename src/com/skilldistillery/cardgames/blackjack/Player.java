@@ -8,16 +8,20 @@ import com.skilldistillery.cardgames.common.Deck;
 import com.skilldistillery.cardgames.common.Person;
 
 public class Player extends Person {
-	// TODO - multiple players, multiple hands each (split)
+	// TODO - implement betting / double / split
 
 	private double cash;
+	
+	public Player() {
+		this("Player");
+	}
 
 	public Player(String name) {
 		this(name, 100.0);
 	}
 
 	public Player(String name, Double startingCash) {
-		super(name, new BlackJackHand());
+		super(name, new BlackjackHand());
 		this.cash = startingCash;
 	}
 
@@ -58,18 +62,17 @@ public class Player extends Person {
 						break;
 
 				}
-			} else if (val > 21){
+			} else if (val > 21) {
 				System.out.println("\n" + getName() + " busted with " + val);
 				break;
-			}
-			else
+			} else
 				break;
 		}
 	}
 
 	public void doOption(String choice, Deck deck) throws IllegalArgumentException {
 		Card card;
-		BlackJackHand hand = (BlackJackHand) getHand();
+		BlackjackHand hand = (BlackjackHand) getHand();
 
 		// TODO - Split/double options
 		switch (choice) {
@@ -94,11 +97,11 @@ public class Player extends Person {
 			System.out.print("\n(H)it\n" + "(S)tand\n" + ">> ");
 		}
 	}
-	
+
 	public void printStatus() {
 		List<Card> cards = getHand().getCards();
 		System.out.print(getName() + " has: ");
-		for(Card card : cards) {
+		for (Card card : cards) {
 			System.out.print("\n\t" + card.toString());
 		}
 	}

@@ -1,10 +1,9 @@
 package com.skilldistillery.cardgames.common;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-public abstract class Hand implements Comparator<Card>{
+public abstract class Hand {
 	private List<Card> hand;
 
 	public Hand() {
@@ -26,11 +25,6 @@ public abstract class Hand implements Comparator<Card>{
 	}
 	
 	@Override
-	public int compare(Card c1, Card c2) {
-		return c1.getValue() - c2.getValue();
-	}
-	
-	@Override
 	public String toString() {
 		String out = "Hand total: " + getHandValue();
 		
@@ -40,6 +34,4 @@ public abstract class Hand implements Comparator<Card>{
 //		}
 		return out;
 	}
-	
-	
 }

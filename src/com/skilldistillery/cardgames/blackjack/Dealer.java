@@ -4,8 +4,13 @@ import com.skilldistillery.cardgames.common.Person;
 
 public class Dealer extends Person {
 
+	// TODO - dealer logic
+	public Dealer() {
+		this("Dealer");
+	}
+	
 	public Dealer(String name) {
-		super(name, new BlackJackHand());
+		super(name, new BlackjackHand());
 	}
 
 	public void takeTurn() {

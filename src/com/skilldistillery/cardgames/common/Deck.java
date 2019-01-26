@@ -7,6 +7,7 @@ import java.util.List;
 public class Deck {
 	List<Card> cards;
 	
+	// TODO - add a Shoe class and option for multiple decks.  Shoe (has-a) --> 1..n decks?
 	public Deck(){
 		cards = new ArrayList<>();
 		for(Suit suit : Suit.values()) {
