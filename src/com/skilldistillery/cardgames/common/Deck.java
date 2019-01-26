@@ -7,7 +7,7 @@ import java.util.List;
 public class Deck {
 	List<Card> cards;
 	
-	Deck(){
+	public Deck(){
 		cards = new ArrayList<>();
 		for(Suit suit : Suit.values()) {
 			for(Rank rank : Rank.values()) {
@@ -21,7 +21,6 @@ public class Deck {
 	}
 	
 	public Card dealCard() {
-		shuffle();
 		Card card = cards.remove(0);
 		return card;
 	}
