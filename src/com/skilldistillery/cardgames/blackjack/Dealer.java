@@ -11,4 +11,11 @@ public class Dealer extends Person {
 	public void takeTurn() {
 		
 	}
+	
+	public boolean isBlackjack() {
+		if(getHand().getCards().size() == 2 && getHand().getHandValue() == 21) {
+			return true;
+		}
+		return false;
+	}
 }
