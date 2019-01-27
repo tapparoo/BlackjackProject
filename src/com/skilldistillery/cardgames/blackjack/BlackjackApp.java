@@ -12,16 +12,14 @@ public class BlackjackApp {
 
 	public static void main(String[] args) {
 		BlackjackApp app = new BlackjackApp();
-		app.run();
+		app.go();
 	}
 
-	// TODO - incorporate betting and option to continue after each hand
-	void run() {
+	// TODO - incorporate betting
+	void go() {
 		Scanner sc = new Scanner(System.in);
 
-		String option = "";
-
-		while (!option.equalsIgnoreCase("q")) {
+		while (true) {
 			System.out.print("How many players? ");
 			try {
 				int numPlayers = Integer.parseInt(sc.next());
@@ -37,50 +35,130 @@ public class BlackjackApp {
 				}
 				break;
 			}
+			String option = "";
 			if (players == null) {
-				runGame(player, sc);
+				option = runGame(player, sc);
 			} else {
-				runGame(players, sc);
+				option = runGame(players, sc);
 			}
-			break;
+			if (option.equalsIgnoreCase("y")) {
+				continue;
+			} else {
+				break;
+			}
 		}
 		sc.close();
 	}
 
-	// TODO - incorporate dealer
-	private void runGame(Player player, Scanner sc) {
+	private String runGame(Player player, Scanner sc) {
 		Deck deck = new Deck();
 		Dealer dealer = new Dealer();
-		BlackjackHand dealerHand = (BlackjackHand) dealer.getHand();
-		BlackjackHand playerHand = (BlackjackHand) player.getHand();
+		int bet = 0;
+		boolean winner = false;
+		String out = "";
 
-		playerHand.addCard(deck.dealCard());
-		dealerHand.addCard(deck.dealCard());
+		while (true) {
+			while (true) {
+				winner = false;
+				System.out.println(player.getName() + " has $" + player.getCash());
+				System.out.print("Bet amount (currently " + bet + "): ");
+				if (!out.equalsIgnoreCase("A")) {
+					try {
+						bet = Integer.parseInt(sc.next());
+						if (bet < 0) {
+							System.out.println("Enter a positive number.");
+							bet = 0;
+							continue;
+						}
+					} catch (NumberFormatException e) {
+						System.out.println("Invalid bet amount.  Try again? (y/n) ");
+						if (sc.next().equalsIgnoreCase("Y")) {
+							continue;
+						} else {
+							return "n";
+						}
+					}
+				}
+				break;
+			}
 
-		playerHand.addCard(deck.dealCard());
-		dealerHand.addCard(deck.dealCard());
-		if (dealerHand.getHandValue() == 21 || playerHand.getHandValue() == 21) {
-			printResults(player, dealer);
+			startNewHand(player, dealer, deck);
+
+			if (dealer.hasBlackjack()) {
+				if (!player.hasBlackjack()) {
+					printResults(player, dealer);
+					break;
+				}
+			} else if (player.hasBlackjack()) {
+				winner = true;
+				printResults(player, dealer);
+				break;
+			} else {
+				player.takeTurn(sc, deck, dealer.getUpCard());
+				if (player.getHand().getHandValue() > 21) {
+					printResults(player, dealer);
+				} else {
+					dealer.takeTurn(deck);
+					if (dealer.getHand().getHandValue() > 21
+							|| player.getHand().getHandValue() > dealer.getHand().getHandValue()) {
+						winner = true;
+					}
+					printResults(player, dealer);
+				}
+			}
+			if (winner) {
+				player.setCash(player.getCash() + bet);
+			} else {
+				player.setCash(player.getCash() - bet);
+			}
+
+			System.out.print("\n" + player.getName() + " has " + player.getCash()
+					+ ".\n(A)gain with same bet\n(C)hange bet\n(N)ew Game\n(Q)uit\n>> ");
+			out = sc.next().toUpperCase();
+			switch (out) {
+			case "Q":
+				return "Q";
+			case "N":
+				return "Y";
+			default:
+				continue;
+			}
 		}
-		
-		player.takeTurn(sc, deck, dealer.getUpCard());
-
-		if (player.getHand().getHandValue() > 21) {
-			printResults(player, dealer);
-		} else {
-			dealer.takeTurn(deck);
-			printResults(player, dealer);
-		}
+		return "N";
 	}
 
 	// TODO - incorporate multiple players and dealer
-	private void runGame(List<Player> players, Scanner sc) {
+	private String runGame(List<Player> players, Scanner sc) {
 		Deck deck = new Deck();
 		Dealer dealer = new Dealer();
+
+		return "";
+	}
+
+	public void startNewHand(Player player, Dealer dealer, Deck deck) {
+		BlackjackHand playerHand = (BlackjackHand) player.getHand();
+		BlackjackHand dealerHand = (BlackjackHand) dealer.getHand();
+		playerHand.clearHand();
+		dealerHand.clearHand();
+
+		if (deck.checkDeckSize() < 15) {
+			System.out.println("\nTime to shuffle...");
+			try {
+				Thread.sleep(1500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			deck = new Deck();
+		}
+
+		playerHand.addCard(deck.dealCard());
+		dealerHand.addCard(deck.dealCard());
+
+		playerHand.addCard(deck.dealCard());
+		dealerHand.addCard(deck.dealCard());
 	}
 
 	private Player loadPlayer(Scanner sc) {
-		Player player = null;
 		System.out.print("Enter player's name or (D)efault: ");
 		String in = sc.next();
 		if (in.equalsIgnoreCase("d")) {
@@ -111,17 +189,17 @@ public class BlackjackApp {
 		int playerHandVal = player.getHand().getHandValue();
 		int dealerHandVal = dealer.getHand().getHandValue();
 
-		out += "\n\n" + dealer.getName() + " had " + dealerHandVal + ".\n" + player.getName() + " had " + playerHandVal
+		out += "\n" + dealer.getName() + " had " + dealerHandVal + ".\n" + player.getName() + " had " + playerHandVal
 				+ ".";
 
 		if (playerHandVal > 21) {
-			out += "\n" + player.getName() + " busted with " + playerHandVal + ". " + dealer.getName() + " wins. :( ";
+			out += "\n**" + player.getName() + " busted.\n" + dealer.getName() + " wins. :( ";
 		} else if (dealerHandVal > 21) {
-			out += "\n" + dealer.getName() + " busted with " + dealerHandVal + ". " + player.getName() + " wins!";
+			out += "\n**" + dealer.getName() + " busted. " + player.getName() + " wins!";
 		} else if (playerHandVal > dealerHandVal) {
 			out += "\n*** " + player.getName() + " wins!! ***";
 		} else if (dealerHandVal > playerHandVal) {
-			out += "\n" + dealer.getName() + " wins. :(";
+			out += "\n**" + dealer.getName() + " wins. :(";
 		} else {
 			out += "\nThis round was a tie.";
 		}

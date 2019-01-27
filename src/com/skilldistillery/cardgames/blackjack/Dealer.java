@@ -52,15 +52,6 @@ public class Dealer extends Person {
 		}
 	}
 
-	// External - during player(s) turn
-	public void printStatus(String dealerUpCard) {
-		List<Card> cards = getHand().getCards();
-		System.out.print("\t" + getName() + " has ");
-		for (Card card : cards) {
-			System.out.print("\n\t\t" + card.toString());
-		}
-	}
-
 	public String getUpCard() {
 		return getHand().getCards().get(0).toString();
 	}

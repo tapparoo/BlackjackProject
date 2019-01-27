@@ -44,6 +44,10 @@ public class Player extends Person {
 			}
 
 			int val = getHand().getHandValue();
+			if(val == 21) {
+				System.out.println("\n" + getName() + " has 21. Standing.\n");
+			}
+			
 			printStatus(dealerUpCard);
 
 			if (val < 21) {
