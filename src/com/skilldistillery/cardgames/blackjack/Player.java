@@ -11,7 +11,7 @@ public class Player extends Person {
 	// TODO - implement betting / double / split
 
 	private double cash;
-	
+
 	public Player() {
 		this("Player");
 	}
@@ -33,21 +33,21 @@ public class Player extends Person {
 		this.cash = money;
 	}
 
-	public void takeTurn(Scanner sc, Deck deck) {
+	public void takeTurn(Scanner sc, Deck deck, String dealerUpCard) {
 		String choice = "";
 
 		while (!choice.equalsIgnoreCase("S") && !choice.equalsIgnoreCase("Q")) {
 
-			if (isBlackjack()) {
+			if (hasBlackjack()) {
 				System.out.println(getName() + " has Blackjack!!");
 				break;
 			}
 
 			int val = getHand().getHandValue();
-			printStatus();
+			printStatus(dealerUpCard);
 
 			if (val < 21) {
-				System.out.println("\n\nTotal: " + val);
+				System.out.println("\n\tTotal: " + val);
 				printOptions(val);
 				choice = sc.next();
 
@@ -62,9 +62,6 @@ public class Player extends Person {
 						break;
 
 				}
-			} else if (val > 21) {
-				System.out.println("\n" + getName() + " busted with " + val);
-				break;
 			} else
 				break;
 		}
@@ -95,18 +92,21 @@ public class Player extends Person {
 	public void printOptions(int val) {
 		if (val < 21) {
 			System.out.print("\n(H)it\n" + "(S)tand\n" + ">> ");
+		} else {
+			System.out.println(getName() + " has 21. " + getName() + " stands.\n");
 		}
 	}
 
-	public void printStatus() {
+	public void printStatus(String dealerUpCard) {
 		List<Card> cards = getHand().getCards();
-		System.out.print(getName() + " has: ");
+		System.out.println("\n\tDealer showing:\n\t\t" + dealerUpCard);
+		System.out.print("\t" + getName() + " has ");
 		for (Card card : cards) {
-			System.out.print("\n\t" + card.toString());
+			System.out.print("\n\t\t" + card.toString());
 		}
 	}
 
-	public boolean isBlackjack() {
+	public boolean hasBlackjack() {
 		if (getHand().getCards().size() == 2 && getHand().getHandValue() == 21) {
 			return true;
 		}
