@@ -11,6 +11,8 @@ public class Player extends Person {
 	// TODO - implement betting / double / split
 
 	private double cash;
+	private double currentBet;
+	private boolean doublingDown;
 
 	public Player() {
 		this("Player");
@@ -44,30 +46,32 @@ public class Player extends Person {
 			}
 
 			int val = getHand().getHandValue();
-			if(val == 21) {
-				System.out.println("\n" + getName() + " has 21. Standing.\n");
-			}
-			
+
 			printStatus(dealerUpCard);
-
-			if (val < 21) {
-				System.out.println("\n\tTotal: " + val);
-				printOptions(val);
-				choice = sc.next();
-
-				try {
-					doOption(choice, deck);
-					val = getHand().getHandValue();
-				} catch (IllegalArgumentException e) {
-					System.out.println(e.getMessage());
-					if (sc.next().equalsIgnoreCase("Y"))
-						continue;
-					else
-						break;
-
+			System.out.println("\n\tTotal: " + val);
+			if (!isDoublingDown()) {
+				if (val == 21) {
+					System.out.println("\n" + getName() + " has 21. Standing.\n");
 				}
-			} else
+
+				if (val < 21) {
+					printOptions(val);
+					choice = sc.next();
+
+					try {
+						doOption(choice, deck);
+						val = getHand().getHandValue();
+					} catch (IllegalArgumentException e) {
+						System.out.println(e.getMessage());
+						continue;
+					}
+				} else {
+					break;
+				}
+			} else {
+				setDoublingDown(false);
 				break;
+			}
 		}
 	}
 
@@ -77,6 +81,13 @@ public class Player extends Person {
 
 		// TODO - Split/double options
 		switch (choice) {
+		case "D":
+		case "d":
+			if (cash < currentBet * 2) {
+				throw new IllegalArgumentException("You don't have that much.");
+			}
+			setCurrentBet(currentBet * 2);
+			setDoublingDown(true);
 		case "H":
 		case "h":
 			card = deck.dealCard();
@@ -88,14 +99,14 @@ public class Player extends Person {
 		case "q":
 			break;
 		default:
-			throw new IllegalArgumentException("Invalid selection.  Tr(y) again or (q)uit? ");
+			throw new IllegalArgumentException("Invalid selection.");
 		}
 	}
 
 	// TODO - Split/double options
 	public void printOptions(int val) {
 		if (val < 21) {
-			System.out.print("\n(H)it\n" + "(S)tand\n" + ">> ");
+			System.out.print("\n(H)it" + "\n(D)ouble" + "\n(S)tand\n" + ">> ");
 		} else {
 			System.out.println(getName() + " has 21. " + getName() + " stands.\n");
 		}
@@ -116,4 +127,21 @@ public class Player extends Person {
 		}
 		return false;
 	}
+
+	public double getCurrentBet() {
+		return currentBet;
+	}
+
+	public void setCurrentBet(double currentBet) {
+		this.currentBet = currentBet;
+	}
+
+	public boolean isDoublingDown() {
+		return doublingDown;
+	}
+
+	public void setDoublingDown(boolean doubling) {
+		this.doublingDown = doubling;
+	}
+
 }

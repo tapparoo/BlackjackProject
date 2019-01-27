@@ -8,39 +8,36 @@ import com.skilldistillery.cardgames.common.Deck;
 
 public class BlackjackApp {
 	List<Player> players = null;
-	Player player = null;
 
 	public static void main(String[] args) {
 		BlackjackApp app = new BlackjackApp();
 		app.go();
 	}
 
-	// TODO - incorporate betting
 	void go() {
 		Scanner sc = new Scanner(System.in);
 
 		while (true) {
-			System.out.print("How many players? ");
+			System.out.print("How many players? (1-5)");
 			try {
 				int numPlayers = Integer.parseInt(sc.next());
-				if (numPlayers > 1) {
-					loadMultiplePlayers(numPlayers, sc);
-				} else {
-					player = loadPlayer(sc);
+				if (numPlayers < 1 || numPlayers > 5) {
+					System.out.println("Number of players must be between 1-5.\n");
+					continue;
 				}
+				loadPlayers(numPlayers, sc);
 			} catch (NumberFormatException e) {
 				System.out.print("Invalid selection.  Try again (y/n) ");
 				if (sc.next().equalsIgnoreCase("y")) {
 					continue;
 				}
 				break;
+			} catch (IllegalArgumentException e) {
+				System.out.println(e.getMessage());
+				continue;
 			}
-			String option = "";
-			if (players == null) {
-				option = runGame(player, sc);
-			} else {
-				option = runGame(players, sc);
-			}
+
+			String option = runGame(sc);
 			if (option.equalsIgnoreCase("y")) {
 				continue;
 			} else {
@@ -50,72 +47,67 @@ public class BlackjackApp {
 		sc.close();
 	}
 
-	private String runGame(Player player, Scanner sc) {
-		Deck deck = new Deck();
+	private String runGame(Scanner sc) {
 		Dealer dealer = new Dealer();
-		int bet = 0;
-		boolean winner = false;
-		String out = "";
+		Deck deck = new Deck();
+		boolean[] playerBustOrBJ = new boolean[players.size()];
+		boolean skipDealerTurn = true;
 
 		while (true) {
-			while (true) {
-				winner = false;
-				System.out.println(player.getName() + " has $" + player.getCash());
-				System.out.print("Bet amount (currently " + bet + "): ");
-				if (!out.equalsIgnoreCase("A")) {
-					try {
-						bet = Integer.parseInt(sc.next());
-						if (bet < 0) {
-							System.out.println("Enter a positive number.");
-							bet = 0;
-							continue;
-						}
-					} catch (NumberFormatException e) {
-						System.out.println("Invalid bet amount.  Try again? (y/n) ");
-						if (sc.next().equalsIgnoreCase("Y")) {
-							continue;
-						} else {
-							return "n";
-						}
-					}
-				}
-				break;
-			}
-
-			startNewHand(player, dealer, deck);
-
+			startNewHand(dealer, deck);
 			if (dealer.hasBlackjack()) {
-				if (!player.hasBlackjack()) {
-					printResults(player, dealer);
-					break;
-				}
-			} else if (player.hasBlackjack()) {
-				winner = true;
-				printResults(player, dealer);
-				break;
+				System.out.println("Dealer has blackjack. :(");
 			} else {
-				player.takeTurn(sc, deck, dealer.getUpCard());
-				if (player.getHand().getHandValue() > 21) {
-					printResults(player, dealer);
-				} else {
-					dealer.takeTurn(deck);
-					if (dealer.getHand().getHandValue() > 21
-							|| player.getHand().getHandValue() > dealer.getHand().getHandValue()) {
-						winner = true;
+				for (int i = 0; i < players.size(); i++) {
+					Player p = players.get(i);
+
+					doPlayerTurn(p, deck, sc, dealer);
+
+					if (p.getHand().getHandValue() > 21 || p.hasBlackjack()) {
+						playerBustOrBJ[i] = true;
+					} else {
+						playerBustOrBJ[i] = false;
 					}
-					printResults(player, dealer);
+				}
+				// skip dealer's turn if all players bust and/or have blackjack
+				for (boolean b : playerBustOrBJ) {
+					if (b == false) {
+						skipDealerTurn = false;
+					}
+				}
+				if (!skipDealerTurn) {
+					dealer.takeTurn(deck);
+				}
+				printDealerResults(dealer);
+
+				// adjust cash
+				for (int i = 0; i < players.size(); i++) {
+					Player p = players.get(i);
+
+					if (!isTie(p, dealer)) {
+						if (isWinner(players.get(i), dealer)) {
+							if (p.hasBlackjack()) {
+								p.setCash(p.getCash() + (3 * p.getCurrentBet()) / 2);
+							} else {
+								p.setCash(p.getCash() + p.getCurrentBet());
+							}
+						} else {
+							p.setCash(p.getCash() - p.getCurrentBet());
+						}
+					} else {
+						if (p.hasBlackjack() && !dealer.hasBlackjack()) {
+							p.setCash(p.getCash() + (p.getCurrentBet() * 3) / 2);
+						}
+					}
 				}
 			}
-			if (winner) {
-				player.setCash(player.getCash() + bet);
-			} else {
-				player.setCash(player.getCash() - bet);
+			for (Player player : players) {
+				printPlayerResults(player, dealer, player.getCurrentBet());
 			}
 
-			System.out.print("\n" + player.getName() + " has " + player.getCash()
-					+ ".\n(A)gain with same bet\n(C)hange bet\n(N)ew Game\n(Q)uit\n>> ");
-			out = sc.next().toUpperCase();
-			switch (out) {
+			System.out.print("\n(C)ontinue\n(N)ew Game\n(Q)uit\n>> ");
+
+			switch (sc.next().toUpperCase()) {
 			case "Q":
 				return "Q";
 			case "N":
@@ -124,24 +116,60 @@ public class BlackjackApp {
 				continue;
 			}
 		}
-		return "N";
 	}
 
-	// TODO - incorporate multiple players and dealer
-	private String runGame(List<Player> players, Scanner sc) {
-		Deck deck = new Deck();
-		Dealer dealer = new Dealer();
-
-		return "";
+	private boolean isWinner(Player player, Dealer dealer) {
+		if (player.getHand().getHandValue() <= 21 && (dealer.getHand().getHandValue() > 21
+				|| player.getHand().getHandValue() > dealer.getHand().getHandValue())) {
+			return true;
+		}
+		return false;
 	}
 
-	public void startNewHand(Player player, Dealer dealer, Deck deck) {
-		BlackjackHand playerHand = (BlackjackHand) player.getHand();
-		BlackjackHand dealerHand = (BlackjackHand) dealer.getHand();
-		playerHand.clearHand();
-		dealerHand.clearHand();
+	private boolean isTie(Player player, Dealer dealer) {
+		if (player.getHand().getHandValue() <= 21
+				&& player.getHand().getHandValue() == dealer.getHand().getHandValue()) {
+			return true;
+		}
+		return false;
+	}
 
-		if (deck.checkDeckSize() < 15) {
+	private void doPlayerTurn(Player player, Deck deck, Scanner sc, Dealer dealer) {
+		double bet = player.getCurrentBet();
+
+		while (true) {
+			System.out.println("\n" + player.getName() + " has $" + player.getCash());
+			System.out.print("Bet amount: ");
+			try {
+				bet = Double.parseDouble(sc.next());
+				if (bet < 0) {
+					System.out.println("Enter a positive number.");
+					bet = 0;
+					continue;
+				} else if (bet > player.getCash()) {
+					System.out.println("You don't have that much.");
+					bet = 0;
+					continue;
+				}
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid bet amount.  Try again.");
+				continue;
+			}
+			break;
+		}
+
+		player.setCurrentBet(bet);
+		if (!dealer.hasBlackjack()) {
+			if (!player.hasBlackjack()) {
+				player.takeTurn(sc, deck, dealer.getUpCard());
+			} else {
+				System.out.println("\n" + player.getName() + " has Blackjack!");
+			}
+		}
+	}
+
+	public void startNewHand(Dealer dealer, Deck deck) {
+		if (deck.checkDeckSize() < 20) {
 			System.out.println("\nTime to shuffle...");
 			try {
 				Thread.sleep(1500);
@@ -150,59 +178,70 @@ public class BlackjackApp {
 			}
 			deck = new Deck();
 		}
-
-		playerHand.addCard(deck.dealCard());
-		dealerHand.addCard(deck.dealCard());
-
-		playerHand.addCard(deck.dealCard());
-		dealerHand.addCard(deck.dealCard());
-	}
-
-	private Player loadPlayer(Scanner sc) {
-		System.out.print("Enter player's name or (D)efault: ");
-		String in = sc.next();
-		if (in.equalsIgnoreCase("d")) {
-			player = new Player();
-		} else {
-			player = new Player(in);
+		for (Player player : players) {
+			player.getHand().clearHand();
 		}
-		return player;
+		dealer.getHand().clearHand();
+
+		// Every player gets 1 card, then the dealer, then again
+		for (int i = 0; i < 2; i++) {
+			for (Player player : players) {
+				player.getHand().addCard(deck.dealCard());
+			}
+			dealer.getHand().addCard(deck.dealCard());
+		}
 	}
 
-	private List<Player> loadMultiplePlayers(int numPlayers, Scanner sc) {
+	private List<Player> loadPlayers(int numPlayers, Scanner sc) {
 		players = new ArrayList<>();
 
 		for (int i = 0; i < numPlayers; i++) {
-			System.out.print("Player " + (i + 1) + " name or (D)efault: ");
+			System.out.print("Player " + (i + 1) + "'s name or (D)efault: ");
 			String in = sc.next();
 			if (in.equalsIgnoreCase("d")) {
 				players.add(new Player("Player" + (i + 1)));
 			} else {
-				players.add(new Player(sc.next()));
+				players.add(new Player(in));
 			}
 		}
 		return players;
 	}
 
-	public void printResults(Player player, Dealer dealer) {
-		String out = "";
+	public void printDealerResults(Dealer dealer) {
+		int dealerHandVal = dealer.getHand().getHandValue();
+		String out = "\n" + separator() + "\n\tDealer had " + dealerHandVal + ". ";
+
+		if (dealerHandVal > 21) {
+			out += "Dealer busts!\n";
+		} else if (dealerHandVal == 21 && dealer.getHand().getCards().size() == 2) {
+			out += "\nBlackjack.  :(\n";
+		}
+		out += "\n" + separator();
+		System.out.println(out);
+	}
+
+	public void printPlayerResults(Player player, Dealer dealer, double bet) {
 		int playerHandVal = player.getHand().getHandValue();
 		int dealerHandVal = dealer.getHand().getHandValue();
+		String out = player.getName() + " has " + playerHandVal + ". ";
 
-		out += "\n" + dealer.getName() + " had " + dealerHandVal + ".\n" + player.getName() + " had " + playerHandVal
-				+ ".";
-
-		if (playerHandVal > 21) {
-			out += "\n**" + player.getName() + " busted.\n" + dealer.getName() + " wins. :( ";
-		} else if (dealerHandVal > 21) {
-			out += "\n**" + dealer.getName() + " busted. " + player.getName() + " wins!";
-		} else if (playerHandVal > dealerHandVal) {
-			out += "\n*** " + player.getName() + " wins!! ***";
+		if (player.hasBlackjack() && !dealer.hasBlackjack()) {
+			out += player.getName() + " has Blackjack. and won $" + bet + ". New cash total: $" + player.getCash();
+		} else if (playerHandVal > 21) {
+			out += player.getName() + " busted and lost $" + bet + ". New cash total: $" + player.getCash();
+		} else if (dealerHandVal > 21 || playerHandVal > dealerHandVal) {
+			out += player.getName() + " wins $" + bet + ". New cash total: $" + player.getCash();
 		} else if (dealerHandVal > playerHandVal) {
-			out += "\n**" + dealer.getName() + " wins. :(";
+			out += player.getName() + " lost $" + bet + ". New cash total: $" + player.getCash();
 		} else {
-			out += "\nThis round was a tie.";
+			out += "Tie. " + player.getName() + "'s current cash total: $" + player.getCash();
 		}
+		out += "\n" + separator();
+
 		System.out.println(out);
+	}
+	
+	public String separator() {
+		return "------------------------------------------------------------";
 	}
 }
