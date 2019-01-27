@@ -70,7 +70,7 @@ public class Dealer extends Person {
 		BlackjackHand hand = (BlackjackHand) getHand();
 		boolean hasAce = false;
 
-		if (getHand().getHandValue() != 17) {
+		if (hand.getHandValue() != 17) {
 			return false;
 		}
 		for (Card card : hand.getCards()) {

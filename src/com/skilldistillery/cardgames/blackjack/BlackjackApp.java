@@ -19,7 +19,7 @@ public class BlackjackApp {
 		Scanner sc = new Scanner(System.in);
 
 		while (true) {
-			System.out.print("How many players? (1-5)");
+			System.out.print("How many players? (1-5) ");
 			try {
 				int numPlayers = Integer.parseInt(sc.next());
 				if (numPlayers < 1 || numPlayers > 5) {
@@ -39,8 +39,10 @@ public class BlackjackApp {
 			}
 
 			String option = runGame(sc);
+			// New game
 			if (option.equalsIgnoreCase("y")) {
 				continue;
+				// Game over
 			} else {
 				break;
 			}
@@ -56,6 +58,7 @@ public class BlackjackApp {
 
 		while (true) {
 			startNewHand(dealer);
+
 			if (dealer.hasBlackjack()) {
 				System.out.println("Dealer has blackjack. :(");
 			} else {
@@ -70,6 +73,7 @@ public class BlackjackApp {
 						playerBustOrBJ[i] = false;
 					}
 				}
+
 				// skip dealer's turn if all players bust and/or have blackjack
 				for (boolean b : playerBustOrBJ) {
 					if (b == false) {
@@ -109,12 +113,15 @@ public class BlackjackApp {
 			System.out.print("\n(C)ontinue\n(N)ew Game\n(Q)uit\n>> ");
 
 			switch (sc.next().toUpperCase()) {
+
 			case "Q":
-				return "Q";
+				return "Q"; // Game over
+
 			case "N":
-				return "Y";
+				return "Y"; // Start over
+
 			default:
-				continue;
+				continue; // New hand w/same player(s) info
 			}
 		}
 	}
@@ -160,12 +167,11 @@ public class BlackjackApp {
 		}
 
 		player.setCurrentBet(bet);
-		if (!dealer.hasBlackjack()) {
-			if (!player.hasBlackjack()) {
-				player.takeTurn(sc, deck, dealer.getUpCard());
-			} else {
-				System.out.println("\n" + player.getName() + " has Blackjack!");
-			}
+
+		if (!player.hasBlackjack()) {
+			player.takeTurn(sc, deck, dealer.getUpCard());
+		} else {
+			System.out.println("\n" + player.getName() + " has Blackjack!");
 		}
 	}
 
@@ -179,6 +185,8 @@ public class BlackjackApp {
 			}
 			deck = new Deck();
 		}
+		
+		// Get rid of current cards
 		for (Player player : players) {
 			player.getHand().clearHand();
 		}
@@ -241,7 +249,7 @@ public class BlackjackApp {
 
 		System.out.println(out);
 	}
-	
+
 	public String separator() {
 		return "------------------------------------------------------------";
 	}
