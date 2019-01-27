@@ -8,6 +8,7 @@ import com.skilldistillery.cardgames.common.Deck;
 
 public class BlackjackApp {
 	List<Player> players = null;
+	Deck deck;
 
 	public static void main(String[] args) {
 		BlackjackApp app = new BlackjackApp();
@@ -49,19 +50,19 @@ public class BlackjackApp {
 
 	private String runGame(Scanner sc) {
 		Dealer dealer = new Dealer();
-		Deck deck = new Deck();
+		deck = new Deck();
 		boolean[] playerBustOrBJ = new boolean[players.size()];
 		boolean skipDealerTurn = true;
 
 		while (true) {
-			startNewHand(dealer, deck);
+			startNewHand(dealer);
 			if (dealer.hasBlackjack()) {
 				System.out.println("Dealer has blackjack. :(");
 			} else {
 				for (int i = 0; i < players.size(); i++) {
 					Player p = players.get(i);
 
-					doPlayerTurn(p, deck, sc, dealer);
+					doPlayerTurn(p, sc, dealer);
 
 					if (p.getHand().getHandValue() > 21 || p.hasBlackjack()) {
 						playerBustOrBJ[i] = true;
@@ -134,7 +135,7 @@ public class BlackjackApp {
 		return false;
 	}
 
-	private void doPlayerTurn(Player player, Deck deck, Scanner sc, Dealer dealer) {
+	private void doPlayerTurn(Player player, Scanner sc, Dealer dealer) {
 		double bet = player.getCurrentBet();
 
 		while (true) {
@@ -168,7 +169,7 @@ public class BlackjackApp {
 		}
 	}
 
-	public void startNewHand(Dealer dealer, Deck deck) {
+	public void startNewHand(Dealer dealer) {
 		if (deck.checkDeckSize() < 20) {
 			System.out.println("\nTime to shuffle...");
 			try {
@@ -226,7 +227,7 @@ public class BlackjackApp {
 		String out = player.getName() + " has " + playerHandVal + ". ";
 
 		if (player.hasBlackjack() && !dealer.hasBlackjack()) {
-			out += player.getName() + " has Blackjack. and won $" + bet + ". New cash total: $" + player.getCash();
+			out += player.getName() + " has Blackjack and won $" + bet + ". New cash total: $" + player.getCash();
 		} else if (playerHandVal > 21) {
 			out += player.getName() + " busted and lost $" + bet + ". New cash total: $" + player.getCash();
 		} else if (dealerHandVal > 21 || playerHandVal > dealerHandVal) {

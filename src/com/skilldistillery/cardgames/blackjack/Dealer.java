@@ -16,20 +16,23 @@ public class Dealer extends Person {
 		super(name, new BlackjackHand());
 	}
 
-	// TODO - deal with soft 17
 	public void takeTurn(Deck deck) {
 		System.out.println("\n" + getName() + "'s turn!\n");
 		sleep();
 		System.out.println("\n" + getName() + "'s other card was a " + getHand().getCards().get(1).toString());
 		printStatus();
-		while (getHand().getHandValue() < 17) {
+		while (getHand().getHandValue() < 17 || hasSoft17()) {
 			sleep();
-			System.out.println("\n" + getName() + " is taking a card...\n");
+			if (hasSoft17()) {
+				System.out.println("\n" + getName() + " has soft 17 and is taking a card...\n");
+			} else {
+				System.out.println("\n" + getName() + " is taking a card...\n");
+			}
 			sleep();
 			getHand().addCard(deck.dealCard());
 			printStatus();
 		}
-		if(getHand().getHandValue() <= 21) {
+		if (getHand().getHandValue() <= 21) {
 			System.out.println("\n" + getName() + " is standing.\n");
 		}
 		sleep();
@@ -63,12 +66,31 @@ public class Dealer extends Person {
 		return false;
 	}
 
-	// TODO - figure out logic. This will only work for 1st two cards
 	public boolean hasSoft17() {
-		if (getHand().getHandValue() == 17) {
-			if (getHand().getCards().get(0).getValue() == 11 || getHand().getCards().get(1).getValue() == 11) {
-				return true;
+		BlackjackHand hand = (BlackjackHand) getHand();
+		boolean hasAce = false;
+
+		if (getHand().getHandValue() != 17) {
+			return false;
+		}
+		for (Card card : hand.getCards()) {
+			if (card.getValue() == 11) {
+				hasAce = true;
 			}
+		}
+
+		if (hasAce) {
+			int nonAcesVal = 0;
+			int acesCount = 0;
+			for (Card card : hand.getCards()) {
+				int val = card.getValue();
+				if (val != 11) {
+					nonAcesVal += val;
+				} else {
+					acesCount += 1;
+				}
+			}
+			return 17 - 11 - nonAcesVal + acesCount - 1 == 0;
 		}
 		return false;
 	}
