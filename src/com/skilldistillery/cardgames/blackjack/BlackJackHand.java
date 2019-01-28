@@ -6,9 +6,9 @@ import java.util.List;
 import com.skilldistillery.cardgames.common.Card;
 import com.skilldistillery.cardgames.common.Hand;
 
-public class BlackjackHand extends Hand {
+public class BlackJackHand extends Hand {
 
-	public BlackjackHand() {
+	public BlackJackHand() {
 	}
 
 	@Override

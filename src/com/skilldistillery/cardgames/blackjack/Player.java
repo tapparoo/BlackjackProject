@@ -22,7 +22,7 @@ public class Player extends Person {
 	}
 
 	public Player(String name, Double startingCash) {
-		super(name, new BlackjackHand());
+		super(name, new BlackJackHand());
 		this.cash = startingCash;
 	}
 
@@ -76,7 +76,7 @@ public class Player extends Person {
 
 	public void doOption(String choice, Deck deck) throws IllegalArgumentException {
 		Card card;
-		BlackjackHand hand = (BlackjackHand) getHand();
+		BlackJackHand hand = (BlackJackHand) getHand();
 
 		switch (choice) {
 		case "D":

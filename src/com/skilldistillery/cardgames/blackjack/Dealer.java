@@ -13,7 +13,7 @@ public class Dealer extends Person {
 	}
 
 	public Dealer(String name) {
-		super(name, new BlackjackHand());
+		super(name, new BlackJackHand());
 	}
 
 	public void takeTurn(Deck deck) {
@@ -67,7 +67,7 @@ public class Dealer extends Person {
 	}
 
 	public boolean hasSoft17() {
-		BlackjackHand hand = (BlackjackHand) getHand();
+		BlackJackHand hand = (BlackJackHand) getHand();
 		boolean hasAce = false;
 
 		if (hand.getHandValue() != 17) {
