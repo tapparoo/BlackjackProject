@@ -59,8 +59,14 @@ public class BlackjackApp {
 		while (true) {
 			startNewHand(dealer);
 
+			for (int i = 0; i < players.size(); i++) {
+				Player p = players.get(i);
+				makePlayerBet(p, sc);
+			}
+
 			if (dealer.hasBlackjack()) {
-				System.out.println("Dealer has blackjack. :(");
+				System.out.println("\nDealer has blackjack. :(\n" + separator());
+
 			} else {
 				for (int i = 0; i < players.size(); i++) {
 					Player p = players.get(i);
@@ -82,27 +88,28 @@ public class BlackjackApp {
 				}
 				if (!skipDealerTurn) {
 					dealer.takeTurn(deck);
+					skipDealerTurn = true;
 				}
 				printDealerResults(dealer);
 
-				// adjust cash
-				for (int i = 0; i < players.size(); i++) {
-					Player p = players.get(i);
+			}
+			// adjust cash
+			for (int i = 0; i < players.size(); i++) {
+				Player p = players.get(i);
 
-					if (!isTie(p, dealer)) {
-						if (isWinner(players.get(i), dealer)) {
-							if (p.hasBlackjack()) {
-								p.setCash(p.getCash() + (3 * p.getCurrentBet()) / 2);
-							} else {
-								p.setCash(p.getCash() + p.getCurrentBet());
-							}
+				if (!isTie(p, dealer)) {
+					if (isWinner(players.get(i), dealer)) {
+						if (p.hasBlackjack()) {
+							p.setCash(p.getCash() + (3 * p.getCurrentBet()) / 2);
 						} else {
-							p.setCash(p.getCash() - p.getCurrentBet());
+							p.setCash(p.getCash() + p.getCurrentBet());
 						}
 					} else {
-						if (p.hasBlackjack() && !dealer.hasBlackjack()) {
-							p.setCash(p.getCash() + (p.getCurrentBet() * 3) / 2);
-						}
+						p.setCash(p.getCash() - p.getCurrentBet());
+					}
+				} else {
+					if (p.hasBlackjack() && !dealer.hasBlackjack()) {
+						p.setCash(p.getCash() + (p.getCurrentBet() * 3) / 2);
 					}
 				}
 			}
@@ -142,11 +149,11 @@ public class BlackjackApp {
 		return false;
 	}
 
-	private void doPlayerTurn(Player player, Scanner sc, Dealer dealer) {
+	private void makePlayerBet(Player player, Scanner sc) {
 		double bet = player.getCurrentBet();
 
 		while (true) {
-			System.out.println("\n" + player.getName() + " has $" + player.getCash());
+			System.out.println("\n" + player.getName() + " has $" + String.format("%.2f", player.getCash()));
 			System.out.print("Bet amount: ");
 			try {
 				bet = Double.parseDouble(sc.next());
@@ -165,9 +172,10 @@ public class BlackjackApp {
 			}
 			break;
 		}
-
 		player.setCurrentBet(bet);
+	}
 
+	private void doPlayerTurn(Player player, Scanner sc, Dealer dealer) {
 		if (!player.hasBlackjack()) {
 			player.takeTurn(sc, deck, dealer.getUpCard());
 		} else {
@@ -185,7 +193,7 @@ public class BlackjackApp {
 			}
 			deck = new Deck();
 		}
-		
+
 		// Get rid of current cards
 		for (Player player : players) {
 			player.getHand().clearHand();
@@ -233,17 +241,19 @@ public class BlackjackApp {
 		int playerHandVal = player.getHand().getHandValue();
 		int dealerHandVal = dealer.getHand().getHandValue();
 		String out = player.getName() + " has " + playerHandVal + ". ";
+		String betToString = String.format("%.2f", bet);
+		String cashToString = String.format("%.2f", player.getCash());
 
 		if (player.hasBlackjack() && !dealer.hasBlackjack()) {
-			out += player.getName() + " has Blackjack and won $" + bet + ". New cash total: $" + player.getCash();
+			out += player.getName() + " has Blackjack and won $" + betToString + ". New cash total: $" + cashToString;
 		} else if (playerHandVal > 21) {
-			out += player.getName() + " busted and lost $" + bet + ". New cash total: $" + player.getCash();
+			out += player.getName() + " busted and lost $" + betToString + ". New cash total: $" + cashToString;
 		} else if (dealerHandVal > 21 || playerHandVal > dealerHandVal) {
-			out += player.getName() + " wins $" + bet + ". New cash total: $" + player.getCash();
+			out += player.getName() + " wins $" + betToString + ". New cash total: $" + cashToString;
 		} else if (dealerHandVal > playerHandVal) {
-			out += player.getName() + " lost $" + bet + ". New cash total: $" + player.getCash();
+			out += player.getName() + " lost $" + betToString + ". New cash total: $" + cashToString;
 		} else {
-			out += "Tie. " + player.getName() + "'s current cash total: $" + player.getCash();
+			out += "Tie. " + player.getName() + "'s current cash total: $" + cashToString;
 		}
 		out += "\n" + separator();
 

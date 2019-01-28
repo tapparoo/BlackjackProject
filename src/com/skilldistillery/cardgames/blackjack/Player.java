@@ -8,7 +8,6 @@ import com.skilldistillery.cardgames.common.Deck;
 import com.skilldistillery.cardgames.common.Person;
 
 public class Player extends Person {
-	// TODO - implement betting / double / split
 
 	private double cash;
 	private double currentBet;
@@ -79,7 +78,6 @@ public class Player extends Person {
 		Card card;
 		BlackjackHand hand = (BlackjackHand) getHand();
 
-		// TODO - Split/double options
 		switch (choice) {
 		case "D":
 		case "d":
@@ -103,10 +101,9 @@ public class Player extends Person {
 		}
 	}
 
-	// TODO - Split/double options
 	public void printOptions(int val) {
 		if (val < 21) {
-			System.out.print("\n(H)it" + "\n(D)ouble" + "\n(S)tand\n" + ">> ");
+			System.out.print("\n(H)it\n(D)ouble\n(S)tand\n>> ");
 		} else {
 			System.out.println(getName() + " has 21. " + getName() + " stands.\n");
 		}
